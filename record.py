@@ -14,15 +14,13 @@ def collectpower(dev):
   # The header of a csv
   print('elapsed,volt,amp,watt')
 
-  # For some count, or timerange, or while True
-  for count in range(20):
+  while True:
     # The current elapsed time
     elapsed = perf_counter()-start
-    # Send our command to the offset for the interface, we should send 4 bytes
-    sent = dev.write(0x3, cmd)
 
-    # This shouldn't happen, not sure if we can recover so just quit
-    if dev.write(0x1, cmd) != 4:
+    # Send our command to the offset for the interface, we should send 4 bytes
+    if dev.write(0x3, cmd) != 4:
+      # This shouldn't happen, not sure if we can recover so just quit
       print(f'ERROR: sent bytes != 4')
       return
 
@@ -63,7 +61,7 @@ if __name__ == '__main__':
   # Claim our interface (see note above regarding sample rate and offsets)
   usb.util.claim_interface(dev, 3)
 
-  # Enter our power collection loop
+  input('Press enter to begin power collection\n')
   try:
     collectpower(dev)
   except KeyboardInterrupt as e: pass
