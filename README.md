@@ -78,8 +78,12 @@ typedef struct {
   uint8_t         n[3];
 }AdcData_TypeDef;
 ```
+Byte locations for struct members inside the entire received data buffer (starting at +8, past the 2 headers):
+| Vbus | Ibus | Vbus_avg | Ibus_avg | Vbus_ori_avg | Ibus_ori_avg | Temp | Vcc1 | Vcc2 | Vdp | Vdm | Vdd | Rate | n |
+|------|------|----------|----------|--------------|--------------|------|------|------|-----|-----|-----|------|---|
+| 8-11 | 12-15 | 16-19   | 20-23    | 24-27        | 28-31        | 32-33 | 34-35 | 36-37 | 38-39 | 40-41 | 42-43 | 44 | 45-47 |
 
-The voltage exists in the response bytes 8-11 and the amps are at bytes 12-15
+Rate has space for a byte but has "only" 2 bits, n is 3 separate bytes, i.e., n[0], n[1], n[2]
 ___
 ### Resources
 #### Looking for a power meter that didn't need Windows, I came across this [article](https://www.anandtech.com/show/18944/usbc-power-metering-with-the-chargerlab-km003c-a-google-twinkie-alternative) as a starting point.
