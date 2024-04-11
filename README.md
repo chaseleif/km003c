@@ -1,6 +1,6 @@
 ## Linux USB utility for the POWER-Z KM003C USB-C power meter
 ### Requirements
-Uses the Pyhon3 module pyusb
+Uses the Python3 module pyusb
 
 Setup requirements using pip:
 ```bash
@@ -8,6 +8,9 @@ $ python3 -m venv venv
 $ source venv/bin/activate
 $ pip install pyusb
 ```
+Check out [PyUSB's git](https://github.com/pyusb/pyusb) for a tutorial and FAQ, if interested
+
+They discuss addressing USB device permission issues in their [FAQ](https://github.com/pyusb/pyusb/blob/master/docs/faq.rst#how-to-practically-deal-with-permission-issues-on-linux)
 ___
 ### Usage
 This version's usage is basic
@@ -23,9 +26,21 @@ There are 3 interfaces available to communicate with the power meter
 |    0      | ~1/second   |     0x1       |     0x81     |
 |    1      | ~5/second   |     0x5       |     0x85     |
 |    3      | ~10/second  |     0x3       |     0x83     |
+
+The script is setup to use interface 3
 ___
+### The data received
+
+The amperage received can be either negative or positive.
+
+To address this, the value received must be treated as a 32-bit integer to obtain the correct value.
+
+This was not observed for the voltage, but could apply to voltage or any of the signed integer types in the data.
+
 ### The messages
+
 POWER-Z provides an archive, `hiddemo_vs2019_for-KM002C3C.zip`, which contains a document and C++ source
+___
 
 The message sent to the device correspond to what is shown in `KM002C&3C API Description.docx` provided by POWER-Z:
 
@@ -51,6 +66,7 @@ To get output which matches the document: 0x0c000200
 The header used in the example source is actually a union, and `tbuf` is a 64-byte array of uint8.
 
 There is a memcpy to tbuf from the header for sizeof(header) which is 4 bytes.
+___
 
 The received data goes into a 64-byte buffer and has bytes:
 |      byte      |  0-3   |   4-7  | 8-47 |
