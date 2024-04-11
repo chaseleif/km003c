@@ -15,9 +15,6 @@ def collectpower(dev):
   print('elapsed,volt,amp,watt')
 
   while True:
-    # The current elapsed time
-    elapsed = perf_counter()-start
-
     # Send our command to the offset for the interface, we should send 4 bytes
     if dev.write(0x3, cmd) != 4:
       # This shouldn't happen, not sure if we can recover so just quit
@@ -33,8 +30,8 @@ def collectpower(dev):
     amps = c_int32(int.from_bytes(data[12:16], byteorder)).value / 1000000
     if amps < 0: amps = -amps
 
-    # Print the measurement
-    print(f'{elapsed:.2f},{volt:.6f},{amps:.6f},{volt*amps:.6f}')
+    # Print the measurements
+    print(f'{perf_counter()-start:.3f},{volt:.6f},{amps:.6f},{volt*amps:.6f}')
 
 if __name__ == '__main__':
   # POWER-Z KM003C

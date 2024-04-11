@@ -37,8 +37,6 @@ The header control type is set to 0xc: `head.ctrl.type = CMD_GET_DATA;`
 
 The header attribute type is set to 0x1: `head.ctrl.att = ATT_ADC;`
 
-The header used in the example source is actually a union.
-
 The hex can be printed:
 ```c++
   printf("0x");
@@ -48,6 +46,11 @@ The hex can be printed:
   printf("\n");
 ```
 To get output which matches the document: 0x0c000200
+
+***NOTE:*** 
+The header used in the example source is actually a union, and `tbuf` is a 64-byte array of uint8.
+
+There is a memcpy to tbuf from the header for sizeof(header) which is 4 bytes.
 
 The received data goes into a 64-byte buffer and has bytes:
 |      byte      |  0-3   |   4-7  | 8-47 |
