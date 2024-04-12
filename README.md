@@ -42,30 +42,62 @@ This was not observed for the voltage, but could apply to voltage or any of the 
 POWER-Z provides an archive, `hiddemo_vs2019_for-KM002C3C.zip`, which contains a document and C++ source
 ___
 
-The message sent to the device correspond to what is shown in `KM002C&3C API Description.docx` provided by POWER-Z:
+The message sent to the device can correspond to what is shown in `KM002C&3C API Description.docx` provided by POWER-Z
 
-Replicating the source for the request, filling out `MsgHeader_TypeDef`, we get:
+*NOTE: the header is a* ***union*** *of size 4 bytes*
 
-The header is zeroed out: `head.object = 0;`
+*the HID document displays each byte as 2 bytes, each with a leading zero, this is not correct*
 
-The header control type is set to 0xc: `head.ctrl.type = CMD_GET_DATA;`
-
-The header attribute type is set to 0x1: `head.ctrl.att = ATT_ADC;`
-
-The hex can be printed:
+Using the following print function we will print the values of the header:
 ```c++
-  printf("0x");
+void prints(uint8_t *data) {
+  static int step = 0;
+  ++step;
+  printf("step %d:\n0x", step);
   for (int i=0;i<4;++i) {
-    printf("%.2x",tbuf[i]);
+    printf("%x",data[i]);
   }
   printf("\n");
+  for (int i=0;i<4;++i) {
+    uint8_t val = data[i];
+    for (int x=7;x>=0;--x) {
+      const uint8_t bit = (val>>x) & 1;
+      printf("%u",bit);
+    }
+  }
+  printf("\n");
+}
 ```
-To get output which matches the document: 0x0c000200
 
-***NOTE:*** 
-The header used in the example source is actually a union, and `tbuf` is a 64-byte array of uint8.
+Replicating the source for the request, we fill out `MsgHeader_TypeDef`:
 
-There is a memcpy to tbuf from the header for sizeof(header) which is 4 bytes.
+1) The header is created: `MsgHeader_TypeDef head;`
+2) The header is zeroed out: `head.object = 0;`
+3) The header control type is set to 0xc: `head.ctrl.type = CMD_GET_DATA;`
+4) The header attribute type is set to 0x1: `head.ctrl.att = ATT_ADC;`
+5) A memcpy is performed into tbuf from header for sizeof(header), or 4 bytes
+
+For each step in steps 1-4, we print the values of the header, for step 5 we print the first 4 bytes of tbuf
+
+Output:
+```bash
+$ ./a.out
+step 1:
+0xe07d87f3
+11100000011111011000011111110011
+step 2:
+0x0000
+00000000000000000000000000000000
+step 3:
+0xc000
+00001100000000000000000000000000
+step 4:
+0xc020
+00001100000000000000001000000000
+step 5:
+0xc020
+00001100000000000000001000000000
+```
 ___
 
 The received data goes into a 64-byte buffer and has bytes:
