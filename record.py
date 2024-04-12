@@ -7,7 +7,7 @@ from sys import byteorder, exit
 
 def collectpower(dev):
   # The command used to obtain data from the device
-  cmd = bytes([0x0c, 0x0f, 0x02, 0x00]).decode('utf-8')
+  cmd = bytes([0xc, 0x0, 0x2, 0x0]).decode('utf-8')
 
   # Our beginning time, for elapsed
   start = perf_counter()
