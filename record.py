@@ -1,11 +1,12 @@
 #! /usr/bin/env python3
 
 import usb.core, usb.util
+from collections import namedtuple
 from ctypes import c_int32
 from time import perf_counter
 from sys import byteorder, exit
 
-def collectpower(dev):
+def collectpower(powermeter):
   # The command used to obtain data from the device
   cmd = bytes([0xc, 0x0, 0x2, 0x0]).decode('utf-8')
 
@@ -16,13 +17,13 @@ def collectpower(dev):
 
   while True:
     # Send our command to the offset for the interface, we should send 4 bytes
-    if dev.write(0x3, cmd) != 4:
+    if powermeter.dev.write(powermeter.write, cmd) != 4:
       # This shouldn't happen, not sure if we can recover so just quit
       print(f'ERROR: sent bytes != 4')
       return
 
     # Read the response from the offset for the interface
-    data = dev.read(0x83, 64)
+    data = powermeter.dev.read(powermeter.read, 64)
 
     # Get voltage and amps and scale them
     volt = int.from_bytes(data[8:12], byteorder) / 1000000
@@ -58,9 +59,15 @@ if __name__ == '__main__':
   # Claim our interface (see note above regarding sample rate and offsets)
   usb.util.claim_interface(dev, 3)
 
+  # Group the device and associated read/write addresses
+  powermeter = namedtuple('meter', ['dev','write','read'])
+  #powermeter = powermeter(dev, 0x1, 0x81) # IF = 0
+  #powermeter = powermeter(dev, 0x5, 0x85) # IF = 1
+  powermeter = powermeter(dev, 0x3, 0x83) # IF = 3
+
   input('Press enter to begin power collection\n')
   try:
-    collectpower(dev)
+    collectpower(powermeter)
   except KeyboardInterrupt as e: pass
   except Exception as e: print(e)
 
