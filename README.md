@@ -46,7 +46,7 @@ The message sent to the device can correspond to what is shown in `KM002C&3C API
 
 *NOTE: the header is a* ***union*** *of size 4 bytes*
 
-*the HID document displays each byte as 2 bytes, each with a leading zero, this is not correct*
+*the HID document displays each byte as 2 bytes, each with a leading zero, this is not (exactly) correct*
 
 Using the following print function we will print the values of the header:
 ```c++
