@@ -50,19 +50,16 @@ The message sent to the device can correspond to what is shown in `KM002C&3C API
 
 Using the following print function we will print the values of the header:
 ```c++
-void prints(uint8_t *data) {
+static void prints(unsigned char *data) {
   static int step = 0;
-  ++step;
-  printf("step %d:\n0x", step);
+  printf("step %d:\n0x", ++step);
   for (int i=0;i<4;++i) {
     printf("%x",data[i]);
   }
   printf("\n");
   for (int i=0;i<4;++i) {
-    uint8_t val = data[i];
     for (int x=7;x>=0;--x) {
-      const uint8_t bit = (val>>x) & 1;
-      printf("%u",bit);
+      printf("%u",(data[i]>>x)&1);
     }
   }
   printf("\n");
