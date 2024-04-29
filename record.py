@@ -19,7 +19,7 @@ def collectpower(powermeter):
     # Send our command to the offset for the interface, we should send 4 bytes
     if powermeter.dev.write(powermeter.write, cmd) != 4:
       # This shouldn't happen, not sure if we can recover so just quit
-      print(f'ERROR: sent bytes != 4')
+      print('ERROR: sent bytes != 4')
       return
 
     # Read the response from the offset for the interface
@@ -42,13 +42,6 @@ if __name__ == '__main__':
     print('Unable to locate POWER-Z KM003C meter')
     exit(1)
 
-  # print(dev) <~ can get IF numbers and IN/OUT offsets
-  # from tests, I receive these sample rates using the above function:
-  # interface | samples | write to | read from
-  #     0     |  ~1/sec |   0x1    |   0x81
-  #     1     |  ~5/sec |   0x5    |   0x85
-  #     3     | ~10/sec |   0x3    |   0x83
-
   # Ensure the kernel is not attached on any interface
   for cfg in dev:
     for intf in cfg:
@@ -57,13 +50,18 @@ if __name__ == '__main__':
         dev.detach_kernel_driver(intf)
 
   # Claim our interface (see note above regarding sample rate and offsets)
-  usb.util.claim_interface(dev, 3)
+  # interface 0, 1, or 3
+  interfacenum = 1
+  usb.util.claim_interface(dev, interfacenum)
 
   # Group the device and associated read/write addresses
   powermeter = namedtuple('meter', ['dev','write','read'])
-  #powermeter = powermeter(dev, 0x1, 0x81) # IF = 0
-  #powermeter = powermeter(dev, 0x5, 0x85) # IF = 1
-  powermeter = powermeter(dev, 0x3, 0x83) # IF = 3
+  if interfacenum == 0:
+    powermeter = powermeter(dev, 0x1, 0x81) # IF = 0, ~1000 samples/sec
+  elif interfacenum == 1:
+    powermeter = powermeter(dev, 0x5, 0x85) # IF = 1 ~500 samples/sec
+  else: # if interfacenum == 3
+    powermeter = powermeter(dev, 0x3, 0x83) # IF = 3 ~ 1000 samples/sec
 
   input('Press enter to begin power collection\n')
   try:

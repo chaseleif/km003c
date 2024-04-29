@@ -21,13 +21,13 @@ ___
 ### The KM003C interfaces
 There are 3 interfaces available to communicate with the power meter
 
-| Interface | Sample Rate | Write Address | Read Address |
-|-----------|-------------|---------------|--------------|
-|    0      | ~1/second   |     0x1       |     0x81     |
-|    1      | ~5/second   |     0x5       |     0x85     |
-|    3      | ~10/second  |     0x3       |     0x83     |
+| Interface | Write Address | Read Address |     bInterfaceClass    |
+|-----------|---------------|--------------|------------------------|
+|    0      |     0x1       |     0x81     |    Vendor Specific     |
+|    1      |     0x5       |     0x85     | Human Interface Device |
+|    3      |     0x3       |     0x83     |        CDC Data        |
 
-The script is setup to use interface 3
+Interfaces 0 and 3 provide 1000 samples/sec, interface 1 provides 500 samples/sec. The script is setup to use interface 1.
 ___
 ### The data received
 
