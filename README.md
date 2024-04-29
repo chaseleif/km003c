@@ -33,7 +33,7 @@ ___
 
 The amperage received can be either negative or positive.
 
-To address this, the value received must be treated as a 32-bit integer to obtain the correct value.
+To address this, the value received must be (and it) treated as a 32-bit integer to obtain the correct value.
 
 This was not observed for the voltage, but could apply to voltage or any of the signed integer types in the data.
 
