@@ -17,13 +17,13 @@ def collectpower(powermeter):
 
   while True:
     # Send our command to the offset for the interface, we should send 4 bytes
-    if powermeter.dev.write(powermeter.write, cmd) != 4:
+    if powermeter.dev.write(powermeter.writeaddr, cmd) != 4:
       # This shouldn't happen, not sure if we can recover so just quit
       print('ERROR: sent bytes != 4')
       return
 
     # Read the response from the offset for the interface
-    data = powermeter.dev.read(powermeter.read, 64)
+    data = powermeter.dev.read(powermeter.readaddr, 64)
 
     # Get voltage and amps and scale them
     volt = int.from_bytes(data[8:12], byteorder) / 1000000
@@ -55,7 +55,7 @@ if __name__ == '__main__':
   usb.util.claim_interface(dev, interfacenum)
 
   # Group the device and associated read/write addresses
-  powermeter = namedtuple('meter', ['dev','write','read'])
+  powermeter = namedtuple('meter', ['dev','writeaddr','readaddr'])
   if interfacenum == 0:
     powermeter = powermeter(dev, 0x1, 0x81) # IF = 0, ~1000 samples/sec
   elif interfacenum == 1:
