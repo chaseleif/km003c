@@ -27,22 +27,30 @@ There are 3 interfaces available to communicate with the power meter
 |    1      |     0x5       |     0x85     | Human Interface Device |
 |    3      |     0x3       |     0x83     |        CDC Data        |
 
-Interfaces 0 and 3 provide 1000 samples/sec, interface 1 provides 500 samples/sec. The script is setup to use interface 1.
+From my usage, I found interfaces 0 and 3 provide 1000 samples/sec, and interface 1 provides 500 samples/sec.
+
+The script is setup to use interface 1.
 ___
 ### The data received
 
 The amperage received can be either negative or positive.
 
-To address this, the value received must be (and it) treated as a 32-bit integer to obtain the correct value.
+To address this, the value received must be (and it is) treated as a 32-bit integer to obtain the correct value.
 
 This was not observed for the voltage, but could apply to voltage or any of the signed integer types in the data.
 
+If you get some other unsigned int out of the data, you may need to account for this as I did for the amps:
+```python
+    amps = c_int32(int.from_bytes(data[12:16], byteorder)).value / 1000000
+    if amps < 0: amps = -amps
+```
+___
 ### The messages
 
 POWER-Z provides an archive, `hiddemo_vs2019_for-KM002C3C.zip`, which contains a document and C++ source
-___
 
-The message sent to the device can correspond to what is shown in `KM002C&3C API Description.docx` provided by POWER-Z
+
+The message sent to the device corresponds to what is shown in `KM002C&3C API Description.docx` provided by POWER-Z
 
 *NOTE: the header is a* ***union*** *of size 4 bytes*
 
