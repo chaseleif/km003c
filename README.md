@@ -1,4 +1,4 @@
-## Linux USB utility for the POWER-Z KM003C USB-C power meter
+## FOSS USB utility for the POWER-Z KM003C USB-C power meter
 ### Requirements
 Uses the Python3 module pyusb
 
