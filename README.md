@@ -29,7 +29,7 @@ There are 3 interfaces available to communicate with the power meter
 
 From my usage, I found interfaces 0 and 3 provide 1000 samples/sec, and interface 1 provides 500 samples/sec.
 
-The script is setup to use interface 1.
+The script uses interface 1, and the interface can be changed by just changing the variable `interfacenum`.
 ___
 ### The data received
 
@@ -39,7 +39,7 @@ To address this, the value received must be (and it is) treated as a 32-bit inte
 
 This was not observed for the voltage, but could apply to voltage or any of the signed integer types in the data.
 
-If you get some other unsigned int out of the data, you may need to account for this as I did for the amps:
+If you get some other signed int out of the data, *int rather than uint*, you may need to account for this as is done for amps in this script:
 ```python
     amps = c_int32(int.from_bytes(data[12:16], byteorder)).value / 1000000
     if amps < 0: amps = -amps
@@ -52,9 +52,9 @@ POWER-Z provides an archive, `hiddemo_vs2019_for-KM002C3C.zip`, which contains a
 
 The message sent to the device corresponds to what is shown in `KM002C&3C API Description.docx` provided by POWER-Z
 
-*NOTE: the header is a* ***union*** *of size 4 bytes*
+**NOTE:** *the header is a* **union** *of size 4 bytes*
 
-*the HID document displays each byte as 2 bytes, each with a leading zero, this is not (exactly) correct*
+*the HID document displays each byte as 2 bytes, each with a leading zero, this is not* ***(exactly)*** *correct*
 
 Using the following print function we will print the values of the header:
 ```c++
@@ -74,7 +74,7 @@ static void prints(unsigned char *data) {
 }
 ```
 
-Replicating the source for the request, we fill out `MsgHeader_TypeDef`:
+Replicating the source of the demo for the filling out a data request, we fill out `MsgHeader_TypeDef`:
 
 1) The header is created: `MsgHeader_TypeDef head;`
 2) The header is zeroed out: `head.object = 0;`
@@ -136,7 +136,9 @@ Byte locations for struct members inside the entire received data buffer (starti
 |------|------|----------|----------|--------------|--------------|------|------|------|-----|-----|-----|------|---|
 | 8-11 | 12-15 | 16-19   | 20-23    | 24-27        | 28-31        | 32-33 | 34-35 | 36-37 | 38-39 | 40-41 | 42-43 | 44 | 45-47 |
 
-Rate has space for a byte but has "only" 2 bits, n is 3 separate bytes, i.e., n[0], n[1], n[2]
+*byte 44:* Rate has space for a byte but has "only" 2 bits
+
+*bytes 45-47:* n is 3 separate bytes, i.e., n[0], n[1], n[2]
 ___
 ### Resources
 #### Looking for a power meter that didn't need Windows, I came across this [article](https://www.anandtech.com/show/18944/usbc-power-metering-with-the-chargerlab-km003c-a-google-twinkie-alternative) as a starting point.
