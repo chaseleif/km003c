@@ -45,16 +45,89 @@ If you get some other signed int out of the data, *int rather than uint*, you ma
     if amps < 0: amps = -amps
 ```
 ___
-### The messages
+### Enums and Structs
 
-POWER-Z provides an archive, `hiddemo_vs2019_for-KM002C3C.zip`, which contains a document and C++ source
+```c++
+enum cmd_ctrl_msg_type {
+  /* 0 Reserved */
+  CMD_SYNC = 1,
+  CMD_CONNECT,
+  CMD_DISCONNECT,
+  CMD_RESET,
+  CMD_ACCEPT,
+  CMD_REJECT,
+  CMD_FINISHED,
+  CMD_JUMP_APROM,
+  CMD_JUMP_DFU,
+  CMD_GET_STATUS,
+  CMD_ERROR,
+  /*app*/
+  CMD_GET_DATA,
+  CMD_GET_FILE
+};
+enum attribute_data_type {
+  /* 0 - 63 Reserved */
+  ATT_ADC = 0x001,
+  ATT_ADC_QUEUE = 0x002,
+  ATT_ADC_QUEUE_10K = 0x004,
+  ATT_SETTINGS = 0x008,
+  ATT_PD_PACKET = 0x010,
+  ATT_PD_STATUS = 0x020,
+  ATT_QC_PACKET = 0x040,
+  ATT_TICK = 0x080,
+  ATT_TICK__ = 0x100,
+};
+typedef union {
+  uint32_t object;
+  uint16_t word[2];
+  uint8_t byte[4];
+  struct {
+    uint32_t type : 7;
+    uint32_t extend : 1;
+    uint32_t id : 8;
+    uint32_t : 1;
+    uint32_t att : 15;
+  }ctrl;
+  struct {
+    uint32_t type : 7;
+    uint32_t extend : 1;
+    uint32_t id : 8;
+    uint32_t encode : 1;
+    uint32_t permi : 2;
+    uint32_t : 3;
+    uint32_t obj : 10;
+  }data;
+  struct {
+    uint32_t att : 15;
+    uint32_t next : 1;
+    uint32_t chunk : 6;
+    uint32_t size : 10;
+  }header;
+}MsgHeader_TypeDef;
+typedef struct {
+  int32_t         Vbus;
+  int32_t         Ibus;
+  int32_t         Vbus_avg;
+  int32_t         Ibus_avg;
+  int32_t         Vbus_ori_avg;
+  int32_t         Ibus_ori_avg;
+  int16_t         Temp;
+  uint16_t        Vcc1;
+  uint16_t        Vcc2;
+  uint16_t        Vdp;
+  uint16_t        Vdm;
+  uint16_t        Vdd;
+  uint8_t         Rate : 2;
+  uint8_t         n[3];
+}AdcData_TypeDef;
+```
 
+___
+### Getting data
+
+POWER-Z provides an archive, `hiddemo_vs2019_for-KM002C3C.zip`, which contains a document and example C++ source
 
 The message sent to the device corresponds to what is shown in `KM002C&3C API Description.docx` provided by POWER-Z
-
-**NOTE:** *the header is a* **union** *of size 4 bytes*
-
-*the HID document displays each byte as 2 bytes, each with a leading zero, this is not* ***(exactly)*** *correct*
 
 Using the following print function we will print the values of the header:
 ```c++
@@ -76,33 +149,39 @@ static void prints(unsigned char *data) {
 
 Replicating the source of the demo for the filling out a data request, we fill out `MsgHeader_TypeDef`:
 
-1) The header is created: `MsgHeader_TypeDef head;`
-2) The header is zeroed out: `head.object = 0;`
-3) The header control type is set to 0xc: `head.ctrl.type = CMD_GET_DATA;`
-4) The header attribute type is set to 0x1: `head.ctrl.att = ATT_ADC;`
-5) A memcpy is performed into tbuf from header for sizeof(header), or 4 bytes
+**note the header is a *union*
 
-For each step in steps 1-4, we print the values of the header, for step 5 we print the first 4 bytes of tbuf
+1) Transfers are done with a buffer size of 64 bytes
+2) We create a buffer: `uint8_t tbuf[64];`
+3) The header is created: `MsgHeader_TypeDef head;`
+4) The header union is set to zero: `head.object = 0;`
+5) The header control type is set to 0xc: `head.ctrl.type = CMD_GET_DATA;`
+6) The header attribute type is set to 0x1: `head.ctrl.att = ATT_ADC;`
+7) A memcpy is performed into tbuf from header for sizeof(header) = 4 bytes
+
+For each step in steps 3-6, we print the values of the header, for step 7 we print the first 4 bytes of tbuf
 
 Output:
 ```bash
 $ ./a.out
-step 1:
+step 3:
 0xe07d87f3
 11100000011111011000011111110011
-step 2:
+step 4:
 0x0000
 00000000000000000000000000000000
-step 3:
+step 5:
 0xc000
 00001100000000000000000000000000
-step 4:
+step 6:
 0xc020
 00001100000000000000001000000000
-step 5:
+step 7:
 0xc020
 00001100000000000000001000000000
 ```
+
+To duplicate this in Python, we need to send the 4 bytes: `0xc020`
 ___
 
 The received data goes into a 64-byte buffer and has bytes:
@@ -110,27 +189,8 @@ The received data goes into a 64-byte buffer and has bytes:
 |----------------|--------|--------|------|
 | data structure | header | header | data |
 
-The second header is an "extended header", which is the same union type.
+The second header is an "extended header", which is the same type.
 
-The data structure is as follows:
-```c++
-typedef struct {
-  int32_t         Vbus;
-  int32_t         Ibus;
-  int32_t         Vbus_avg;
-  int32_t         Ibus_avg;
-  int32_t         Vbus_ori_avg;
-  int32_t         Ibus_ori_avg;
-  int16_t         Temp;
-  uint16_t        Vcc1;
-  uint16_t        Vcc2;
-  uint16_t        Vdp;
-  uint16_t        Vdm;
-  uint16_t        Vdd;
-  uint8_t         Rate : 2;
-  uint8_t         n[3];
-}AdcData_TypeDef;
-```
 Byte locations for struct members inside the entire received data buffer (starting at +8, past the 2 headers):
 | Vbus | Ibus | Vbus_avg | Ibus_avg | Vbus_ori_avg | Ibus_ori_avg | Temp | Vcc1 | Vcc2 | Vdp | Vdm | Vdd | Rate | n |
 |------|------|----------|----------|--------------|--------------|------|------|------|-----|-----|-----|------|---|
